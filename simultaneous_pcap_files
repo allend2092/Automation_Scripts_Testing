@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Script written by Daryl VMware GSS
+# This script will run a series of PCAP commands in the background. Notice the & at the end of each command
+# This runs the packet capture command in the background
+# Kill the packet capture commands with - kill $(lsof |grep pktcap-uw |awk '{print $1}'| sort -u)
+# This kill command is per KB article 2051814 - https://kb.vmware.com/s/article/2051814
+
+# I've enumerated the commands to keep track of how many .pcap files will be produced.
+
+
+# 1. <Packet Capture Comment>
+pktcap-uw --switchport <switchport ID> --vlan <vlan> --ip <ip address> --capture <Capture Points> -o <storage path and file name> &
+
+# 2. <Packet Capture Comment>
+pktcap-uw --switchport <switchport ID> --vni <VNI in hex> --ip <ip address> --capture <Capture Points> -o <storage path and file name> &
+
+# 3. <Packet Capture Comment>
+pktcap-uw --uplink <vmnic ID> --vlan <vlan> --ip <ip address> --capture <Capture Points> -o <storage path and file name> &
+
+# 4. <Packet Capture Comment>
+pktcap-uw --switchport <switchport ID> --capture <Capture Points> -o <storage path and file name> &
