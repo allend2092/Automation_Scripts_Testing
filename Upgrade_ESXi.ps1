@@ -3,20 +3,42 @@
 #Prep: Have the ESXi upgrade image on your local machine and note the path for that file
 #PowerCLI needs to be installed
 #Posh-SSH needs to be installed
+
+
 #To run cli commands on ESXi host, use Psh-SSH:
 #Install-Module -Name Posh-SSH -RequiredVersion 3.0.0
 
+#The above requires unrestricted execution policy:
+#Set-ExecutionPolicy Unrestricted
+
+<#
+ #Ignore self signed certificate errors:
+ PS C:\WINDOWS\system32> Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false
+
+Scope    ProxyPolicy     DefaultVIServerMode InvalidCertificateAction  DisplayDeprecationWarnings WebOperationTimeout
+                                                                                                  Seconds
+-----    -----------     ------------------- ------------------------  -------------------------- -------------------
+Session  UseSystemProxy  Multiple            Ignore                    True                       300
+User                                         Ignore
+AllUsers
+#>
 
 Write-Output "Running ESXi host Upgrade script!"
 
 
 Write-Output "Declaring variables....."
 $vcenter = '1.2.3.4'
+$username = 'administrator@vsphere.local'
+$password = 'VMware1!'
 $esxihost = '1.2.3.5'
+$command = 'unzip /vmfs/volumes/<host datastore>/VMware-ESXi-7.0U2c-18426014-depot.zip -d /vmfs/volumes/<datastore>/'
+$destination = 'vmstore:\DatacenterA\<host datastore>\'
+$upgradebundle = 'C:\<Local File Path>\VMware-ESXi-7.0U2c-18426014-depot.zip'
+$hostpath = '/vmfs/volumes/<host datastore>/vmw-ESXi-7.0.2-metadata.zip'
 
 Write-Output "Connecting to the vCenter"
 #Connect to vCenter:
-Connect-VIServer -Server $vcenter -User administrator@vsphere.local -Password VMware1!
+Connect-VIServer -Server $vcenter -User $username -Password $password
 sleep 2
 
 Write-Output "Listing out hosts for visibilty!"
@@ -46,17 +68,23 @@ sleep 2
 
 Write-Output "Copying host upgrade bundle to the host!"
 #Copy file (upgrade bundle) from my machine to the ESXi host
-Copy-DatastoreItem -Item "C:\Users\allend43\Documents\VMware\SSC Upgrade\VMware-ESXi-7.0U2c-18426014-depot.zip" -Destination vmstore:\DatacenterA\datastore1\
+Copy-DatastoreItem -Item $upgradebundle  -Destination $destination
 sleep 2
 
 Write-Output "Unpacking the upgrade bundle!"
 #Using Posh-SSH Command, Unzip the file on the host to the correct directory
-Invoke-SSHCommand -SessionId 0 -Command 'unzip /vmfs/volumes/datastore1/VMware-ESXi-7.0U2c-18426014-depot.zip -d /vmfs/volumes/datastore1/'
+$setsession = New-SSHSession -ComputerName $esxihost -Credential (Get-Credential root)
+Invoke-SSHCommand -SessionId 0 -Command $command
 sleep 2
 
 Write-Output "Disable SSH for security. It is no longer needed!"
 #disable SSH service since it will not be needed further
 Get-VMHost -name $esxihost| Foreach {Stop-VMHostService -HostService ($_ | Get-VMHostService | Where { $_.Key -eq "TSM-SSH"} )}
+sleep 2
+
+Write-Output "Destroy Posh SSH session. Keep it clean!"
+#Destroy Posh SSH session. Keep it clean!
+Remove-SSHSession -SessionId 0
 sleep 2
 
 Write-Output "Verifying SSH has been disabled!"
@@ -71,7 +99,7 @@ sleep 2
 
 Write-Output "Installing ESXi Upgrade!"
 #Install ESXi Update on the host:
-Get-VMHost -Name $esxihost | Install-VMHostPatch -HostPath /vmfs/volumes/datastore1/vmw-ESXi-7.0.2-metadata.zip
+Get-VMHost -Name $esxihost | Install-VMHostPatch -HostPath $hostpath
 sleep 2
 
 Write-Output "The upgrade has been installed, restarting the host!"
@@ -84,7 +112,7 @@ Write-Output "Check the host version!"
 Get-VMHost | Select @{Label = "Host"; Expression = {$_.Name}} , @{Label = "ESX Version"; Expression = {$_.version}}, @{Label = "ESX Build" ; Expression = {$_.build}}
 sleep 2
 
-Write-Output "Trying to bring the host out of MM! - This step won't work until I include logic to wait for host reboot"
+Write-Output "Trying to bring the host out of MM!"
 # bring the host out of maintenance mode!!!!
 Get-VMHost -Name $esxihost | set-vmhost -State Connected
 sleep 2
