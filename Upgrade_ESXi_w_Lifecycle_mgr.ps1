@@ -5,13 +5,13 @@ Steps to upgrade ESXi host using Lifecycle Manager
 2. If you're going to an upgrade image, get that from my.vmware.com and upload it to the vCenter image repository.
 3. If you're going to a patched version of ESXi, create a baseline, skip the automatic patches and select the patch you want that VC has downloaded.
 4. Identify which hosts require patching and upgrading
-+++++++++++++++++++++++PowerCLI code can do the remaining steps++++++++++++++++++++++++++++
++++++++++++++++++++++++PowerCLI code can do MOST of the remaining steps++++++++++++++++++++++++++++
 
 5. Attach baseline to host
 6. Check that the host is compliant with the baseline
 7. (optional) copy the patch to the host such that it is staged for the actual upgrade
-8. Remediate to baseline
-9. Validate the functionality of the host and of VMs on the host
+8. Remediate to baseline (upgrade)
+9. Validate the functionality of the host and of VMs on the host (PowerCLI can't do this - ask application users to help here)
 #>
 
 #Declare ESXi host to be upgraded
