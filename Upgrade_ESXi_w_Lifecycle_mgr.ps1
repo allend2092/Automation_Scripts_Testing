@@ -14,6 +14,12 @@ Steps to upgrade ESXi host using Lifecycle Manager
 9. Validate the functionality of the host and of VMs on the host (PowerCLI can't do this - ask application users to help here)
 #>
 
+Write-Output "Connecting to the vCenter"
+#Connect to vCenter:
+Connect-VIServer -Server $vcenter -User $username -Password $password
+sleep 2
+
+
 #Declare ESXi host to be upgraded
 $EsxiHost = '<ESXi host ip or URL>'
 
@@ -34,3 +40,7 @@ Copy-Patch -Entity $EsxiHost
 
 #Perform the upgrade / patching
 Update-Entity -Baseline $Baseline -Entity $EsxiHost -RunAsync -Confirm:$False
+
+Write-Output "Disconnect from vCenter!"
+#Disconnect from vCenter
+Disconnect-VIServer -Server $vcenter
