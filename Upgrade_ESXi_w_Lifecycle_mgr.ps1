@@ -15,10 +15,10 @@ Steps to upgrade ESXi host using Lifecycle Manager
 #>
 
 #Declare ESXi host to be upgraded
-$EsxiHost = '172.17.0.55'
+$EsxiHost = '<ESXi host ip or URL>'
 
 #Get the baseline object and stuff it into a variable
-$Baseline = Get-Baseline -name 'New Baseline - 7.0 U3d'
+$Baseline = Get-Baseline -name '<Name of Baseline>'
 
 #Add the baseline to the host
 Add-EntityBaseline -Entity $EsxiHost -Baseline $Baseline
