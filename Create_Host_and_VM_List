@@ -9,7 +9,7 @@ $VMInformation = Get-VM
 $HostInformation = Get-VMHost
 
 #Populate the data member of VMInformation variable since it wasn't populated in the above statement
-$PlaceHolder = $VMInformation.VMHost
+$VMInformation.VMHost
 
 #Generate the list of Hosts and VMs per host using this nested for loop
 foreach( $i in $HostInformation)
