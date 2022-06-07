@@ -1,0 +1,33 @@
+#Do NOT run this as a script. Put each line into the CLI. 
+
+Connect-VIServer -Server <vCenter URL> -User '<username>'  -Password '<Password>'
+
+#Get an object from VC containing all of the VMs
+$VMInformation = Get-VM
+
+#Get an object from VC containing the list of ESXi hosts
+$HostInformation = Get-VMHost
+
+#Populate the data member of VMInformation variable since it wasn't populated in the above statement
+$PlaceHolder = $VMInformation.VMHost
+
+#Generate the list of Hosts and VMs per host using this nested for loop
+foreach( $i in $HostInformation)
+{
+    write-output "**********ESXi Host**************"
+    $i | Select-Object Name, Version, State | Sort-Object -Property Name
+    write-output "**********VMs**************"
+    foreach( $j in $VMInformation )
+    {
+        
+      if( $j.VMHost.Name -eq $i.Name)
+      {
+       $j.Name
+      }
+    }
+    Write-Output ""
+    
+}
+
+#If you can't understand what the next line does, time to find a new job / hobbie.
+Disconnect-VIServer -Server <vCenter URL>
